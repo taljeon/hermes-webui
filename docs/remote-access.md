@@ -106,8 +106,11 @@ shared bucket is reached, wait 60 seconds before trying again.
    - systemd: `systemctl --user stop hermes-webui.service`, then
      `systemctl --user daemon-reload` and
      `systemctl --user start hermes-webui.service`.
-   - launchd: `launchctl unload ~/Library/LaunchAgents/com.example.hermes-webui.plist`,
-     then `launchctl load` with the same plist path.
+   - launchd: `launchctl unload ~/Library/LaunchAgents/com.parantoux.hermes-webui.plist`,
+     update that plist's `ProgramArguments`, then run
+     `launchctl load ~/Library/LaunchAgents/com.parantoux.hermes-webui.plist`.
+     If you customized the label or plist path, use the actual installed plist
+     for both commands.
    - supervisord: `sudo supervisorctl stop hermes-webui`, then
      `sudo supervisorctl reread`, `sudo supervisorctl update`, and
      `sudo supervisorctl start hermes-webui`.
