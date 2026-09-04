@@ -43,18 +43,34 @@ WebUI through the maintained `start.sh` or systemd path.
 
 1. Install [Tailscale](https://tailscale.com/download) on your server and
    your iPhone/Android.
-2. Before publishing anything, enable application authentication. Create or
-   edit `.env` in the WebUI checkout and set a non-empty, strong password:
+2. Before publishing anything, enable application authentication. Prefer
+   configuring a strong password through Settings while reaching WebUI only
+   over loopback or an SSH tunnel; Settings stores a password hash rather than
+   a plaintext password. Keep the Serve cookie setting in the checkout's
+   owner-only `.env`:
+
+   ```bash
+   umask 077
+   touch .env
+   chmod 600 .env
+   ```
 
    ```dotenv
-   HERMES_WEBUI_PASSWORD=replace-with-a-strong-password
    HERMES_WEBUI_SECURE=1
    ```
 
-   Alternatively, configure a password through Settings while reaching WebUI
-   only over loopback or an SSH tunnel. Keep `HERMES_WEBUI_SECURE=1` in the
-   service environment: Serve terminates HTTPS before proxying to the local
-   HTTP backend, so this setting keeps the session cookie HTTPS-only.
+   If Settings is unavailable, the same owner-only file can carry the password:
+
+   ```dotenv
+   HERMES_WEBUI_PASSWORD='replace-with-a-long-random-password'
+   HERMES_WEBUI_SECURE=1
+   ```
+
+   `start.sh` sources `.env` as shell syntax. Keep the password single-quoted
+   and do not use a literal single quote in this path; use Settings for an
+   arbitrary generated password. Serve terminates HTTPS before proxying to the
+   local HTTP backend, so `HERMES_WEBUI_SECURE=1` keeps the session cookie
+   HTTPS-only.
 3. Pin the backend address with launcher arguments, which override any
    conflicting host or port values from `.env`:
 
