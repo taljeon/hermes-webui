@@ -47,7 +47,7 @@ WebUI through the maintained `start.sh` or systemd path.
    loopback address:
 
    ```bash
-   HERMES_WEBUI_PASSWORD=your-secret ./start.sh
+   HERMES_WEBUI_HOST=127.0.0.1 HERMES_WEBUI_PORT=8787 HERMES_WEBUI_PASSWORD=your-secret ./start.sh
    ```
 
 3. On Linux, allow the unprivileged account that runs WebUI to manage
