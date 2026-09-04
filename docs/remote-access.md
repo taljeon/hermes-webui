@@ -74,10 +74,13 @@ WebUI through the maintained `start.sh` or systemd path.
 3. Stop any existing WebUI before changing its binding. A process listening on
    `0.0.0.0:8787` also answers the loopback health probe, so `start.sh` would
    otherwise report "already running" without applying the new host argument.
-   Use `./ctl.sh stop` for a daemon started by `ctl.sh`, or
-   `systemctl --user stop hermes-webui.service` for the systemd unit. If it was
-   started directly, stop the exact listener using the PID instructions that
-   `start.sh` prints. Do not continue until the previous listener has stopped.
+   Use `./ctl.sh stop` for a daemon started by `ctl.sh`. For any process
+   supervisor — systemd, launchd, supervisord, runit, or s6 — use that
+   supervisor's stop, unload, or down action from the
+   [supervisor guide](supervisor.md), then verify it reports the service stopped
+   and cannot auto-restart it. If WebUI was started directly, stop the exact
+   listener using the PID instructions that `start.sh` prints. Do not continue
+   until the previous listener has stopped.
 
    Then pin and start the backend with launcher arguments, which override any
    conflicting host or port values from `.env`:
