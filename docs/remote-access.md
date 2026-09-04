@@ -62,8 +62,18 @@ WebUI through the maintained `start.sh` or systemd path.
    ./start.sh 8787 --host 127.0.0.1
    ```
 
-   For a systemd launch, set the same host, port, and non-empty password in
-   the service environment.
+   For a systemd launch, keep the password (unless it is already configured
+   through Settings) and `HERMES_WEBUI_SECURE=1` in the checkout's `.env`.
+   Then adapt the unit from the [supervisor guide](supervisor.md) so its
+   `ExecStart` pins host and port with arguments too:
+
+   ```ini
+   ExecStart=/bin/bash %h/hermes-webui/start.sh 8787 --host 127.0.0.1 --foreground
+   ```
+
+   Do not rely on systemd `Environment=` entries to override conflicting
+   values in `.env`: `start.sh` loads that file after the service environment.
+   Run `systemctl --user daemon-reload` and restart the unit after editing it.
 4. Open `http://127.0.0.1:8787` locally or through an SSH tunnel and confirm
    that an unauthenticated browser receives the login screen. Do not publish
    the Serve endpoint until this check succeeds. Use the local HTTP URL only
