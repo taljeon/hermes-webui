@@ -43,12 +43,23 @@ WebUI through the maintained `start.sh` or systemd path.
 
 1. Install [Tailscale](https://tailscale.com/download) on your server and
    your iPhone/Android.
-2. Keep password authentication enabled and start the WebUI on its default
-   loopback address:
+2. Keep password authentication enabled. If this checkout has a `.env` file,
+   put the password there instead of relying on an inline environment value;
+   `start.sh` loads `.env` before launch:
+
+   ```dotenv
+   HERMES_WEBUI_PASSWORD=your-secret
+   ```
+
+   Then pin the backend address with launcher arguments, which override any
+   conflicting host or port values from `.env`:
 
    ```bash
-   HERMES_WEBUI_HOST=127.0.0.1 HERMES_WEBUI_PORT=8787 HERMES_WEBUI_PASSWORD=your-secret ./start.sh
+   ./start.sh 8787 --host 127.0.0.1
    ```
+
+   For a systemd launch, set the same host, port, and non-empty password in
+   the service environment.
 
 3. On Linux, allow the unprivileged account that runs WebUI to manage
    Tailscale. This is a one-time administrator action:
@@ -95,11 +106,12 @@ and [Linux operator permission guide](https://tailscale.com/docs/reference/troub
 ### Fallback: direct tailnet IP
 
 If Serve is disabled for your tailnet or you cannot configure an operator,
-bind WebUI to all interfaces with application password authentication enabled,
-then access it through the server's Tailscale IP:
+keep a non-empty `HERMES_WEBUI_PASSWORD` in `.env` as shown above, bind WebUI
+to all interfaces with an explicit launcher override, then access it through
+the server's Tailscale IP:
 
 ```bash
-HERMES_WEBUI_HOST=0.0.0.0 HERMES_WEBUI_PASSWORD=your-secret ./start.sh
+./start.sh 8787 --host 0.0.0.0
 ```
 
 Open `http://<server-tailscale-ip>:8787` in your phone's browser (find the IP
