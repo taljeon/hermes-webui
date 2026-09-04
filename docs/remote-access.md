@@ -90,23 +90,34 @@ WebUI through the maintained `start.sh` or systemd path.
    ./start.sh 8787 --host 127.0.0.1
    ```
 
-   For systemd, launchd, supervisord, runit, or s6, use that supervisor's stop,
-   unload, or down action from the [supervisor guide](supervisor.md), update its
-   configured launch command with `8787 --host 127.0.0.1`, and start it again
-   through the same supervisor. Do not launch `start.sh` directly while a
-   supervisor owns the service. For example, a systemd unit uses:
+   For a supervisor-managed service, run its matching stop command, update the
+   configured launch command with `8787 --host 127.0.0.1`, then use the same
+   owner to start it again:
+
+   - systemd: `systemctl --user stop hermes-webui.service`, then
+     `systemctl --user daemon-reload` and
+     `systemctl --user start hermes-webui.service`.
+   - launchd: `launchctl unload ~/Library/LaunchAgents/com.example.hermes-webui.plist`,
+     then `launchctl load` with the same plist path.
+   - supervisord: `sudo supervisorctl stop hermes-webui`, then
+     `sudo supervisorctl reread`, `sudo supervisorctl update`, and
+     `sudo supervisorctl start hermes-webui`.
+   - runit: `sv down <service>`, then `sv up <service>`.
+   - s6: `s6-svc -d <service-directory>`, then
+     `s6-svc -u <service-directory>`.
+
+   The [supervisor guide](supervisor.md) shows the corresponding launch-command
+   locations. Do not launch `start.sh` directly while a supervisor owns the
+   service. For example, a systemd unit uses:
 
    ```ini
    ExecStart=/bin/bash %h/hermes-webui/start.sh 8787 --host 127.0.0.1 --foreground
    ```
 
-   Do not rely on systemd `Environment=` entries to override conflicting
-   values in `.env`: `start.sh` loads that file after the service environment.
    Keep the password (unless it is already configured through Settings) and
    `HERMES_WEBUI_SECURE=1` in the checkout's `.env`; do not rely on systemd
-   `Environment=` entries to override that later-loaded file. Stop the unit,
-   edit it, run `systemctl --user daemon-reload`, and start it again. Do not
-   continue until the selected lifecycle owner reports the new process running.
+   `Environment=` entries to override that later-loaded file. Do not continue
+   until the selected lifecycle owner reports the new process running.
 
    For a different trusted reverse proxy that sets `X-Forwarded-Proto: https`,
    `HERMES_WEBUI_TRUST_FORWARDED_PROTO=1` is the alternative. Keep the explicit
