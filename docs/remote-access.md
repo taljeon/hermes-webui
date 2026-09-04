@@ -34,12 +34,21 @@ The Hermes Web UI is fully responsive with a mobile-optimized layout
 (hamburger sidebar, sidebar top tabs in the drawer, touch-friendly controls),
 so it works well as a daily-driver agent interface from your phone.
 
-### Preferred: Tailscale Serve
+### Preferred on a single-operator or access-restricted tailnet: Tailscale Serve
 
 [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve) exposes
 the WebUI at a tailnet-only HTTPS/MagicDNS URL while Hermes keeps listening on
 `127.0.0.1`. Serve owns the network front door; continue launching Hermes
 WebUI through the maintained `start.sh` or systemd path.
+
+Hermes currently sees every Serve login request as coming from the local proxy,
+so password and passkey logins share one five-attempt, 60-second rate-limit
+bucket across all clients. Use this path for a single operator, or restrict
+access to the Serve node to the intended operator with [tailnet access-control
+rules](https://tailscale.com/docs/features/access-control). On a broader
+multi-user tailnet, use the SSH tunnel above or the direct-IP fallback below
+until Hermes can safely attribute login attempts per Serve client. If the
+shared bucket is reached, wait 60 seconds before trying again.
 
 1. Install [Tailscale](https://tailscale.com/download) on your server and
    your iPhone/Android.
