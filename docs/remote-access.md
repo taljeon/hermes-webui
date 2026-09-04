@@ -48,10 +48,13 @@ WebUI through the maintained `start.sh` or systemd path.
 
    ```dotenv
    HERMES_WEBUI_PASSWORD=replace-with-a-strong-password
+   HERMES_WEBUI_SECURE=1
    ```
 
    Alternatively, configure a password through Settings while reaching WebUI
-   only over loopback or an SSH tunnel.
+   only over loopback or an SSH tunnel. Keep `HERMES_WEBUI_SECURE=1` in the
+   service environment: Serve terminates HTTPS before proxying to the local
+   HTTP backend, so this setting keeps the session cookie HTTPS-only.
 3. Pin the backend address with launcher arguments, which override any
    conflicting host or port values from `.env`:
 
@@ -63,7 +66,8 @@ WebUI through the maintained `start.sh` or systemd path.
    the service environment.
 4. Open `http://127.0.0.1:8787` locally or through an SSH tunnel and confirm
    that an unauthenticated browser receives the login screen. Do not publish
-   the Serve endpoint until this check succeeds.
+   the Serve endpoint until this check succeeds. Use the local HTTP URL only
+   for this preflight; sign in through the HTTPS Serve URL after publishing.
 
 5. On Linux, allow the unprivileged account that runs WebUI to manage
    Tailscale. This is a one-time administrator action:
@@ -112,7 +116,13 @@ and [Linux operator permission guide](https://tailscale.com/docs/reference/troub
 If Serve is disabled for your tailnet or you cannot configure an operator,
 complete the password setup and login-screen check above, bind WebUI to all
 interfaces with an explicit launcher override, then access it through the
-server's Tailscale IP:
+server's Tailscale IP. Because this fallback uses plain HTTP, change the cookie
+setting before restarting WebUI while keeping the password non-empty:
+
+```dotenv
+HERMES_WEBUI_PASSWORD=replace-with-a-strong-password
+HERMES_WEBUI_SECURE=0
+```
 
 ```bash
 ./start.sh 8787 --host 0.0.0.0
