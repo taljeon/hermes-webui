@@ -71,7 +71,15 @@ WebUI through the maintained `start.sh` or systemd path.
    arbitrary generated password. Serve terminates HTTPS before proxying to the
    local HTTP backend, so `HERMES_WEBUI_SECURE=1` keeps the session cookie
    HTTPS-only.
-3. Pin the backend address with launcher arguments, which override any
+3. Stop any existing WebUI before changing its binding. A process listening on
+   `0.0.0.0:8787` also answers the loopback health probe, so `start.sh` would
+   otherwise report "already running" without applying the new host argument.
+   Use `./ctl.sh stop` for a daemon started by `ctl.sh`, or
+   `systemctl --user stop hermes-webui.service` for the systemd unit. If it was
+   started directly, stop the exact listener using the PID instructions that
+   `start.sh` prints. Do not continue until the previous listener has stopped.
+
+   Then pin and start the backend with launcher arguments, which override any
    conflicting host or port values from `.env`:
 
    ```bash
@@ -89,7 +97,8 @@ WebUI through the maintained `start.sh` or systemd path.
 
    Do not rely on systemd `Environment=` entries to override conflicting
    values in `.env`: `start.sh` loads that file after the service environment.
-   Run `systemctl --user daemon-reload` and restart the unit after editing it.
+   Run `systemctl --user daemon-reload` and restart the stopped unit after
+   editing it.
 
    For a different trusted reverse proxy that sets `X-Forwarded-Proto: https`,
    `HERMES_WEBUI_TRUST_FORWARDED_PROTO=1` is the alternative. Keep the explicit
