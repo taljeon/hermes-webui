@@ -193,7 +193,20 @@ If Serve is disabled for your tailnet or you cannot configure an operator,
 complete the password setup and login-screen check above, bind WebUI to all
 interfaces with an explicit launcher override, then access it through the
 server's Tailscale IP. Because this fallback uses plain HTTP, change the cookie
-setting before restarting WebUI while keeping the password non-empty:
+setting before restarting WebUI while preserving the authentication path you
+already configured.
+
+If you configured the password through Settings, change only the cookie setting
+in the owner-only `.env`:
+
+```dotenv
+HERMES_WEBUI_SECURE=0
+```
+
+Do not add `HERMES_WEBUI_PASSWORD` in this case: the environment value takes
+precedence over the password hash stored by Settings and would replace that
+login credential. If you chose the `.env` password path instead, keep its
+password non-empty and single-quoted:
 
 ```dotenv
 HERMES_WEBUI_PASSWORD='replace-with-a-long-random-password'
@@ -210,7 +223,9 @@ that owner's host argument to `0.0.0.0`. For a direct launch only, run:
 Open `http://<server-tailscale-ip>:8787` in your phone's browser (find the IP
 in the Tailscale app or with `tailscale ip -4` on the server).
 
-Never bind Hermes WebUI to `0.0.0.0` without `HERMES_WEBUI_PASSWORD`.
+Never bind Hermes WebUI to `0.0.0.0` without confirmed application
+authentication. For the `.env` password path, keep `HERMES_WEBUI_PASSWORD`
+non-empty; for the Settings path, preserve the stored password hash instead.
 `0.0.0.0` listens on every interface, not only Tailscale, so keep the host
 firewall restricted as well. Traffic inside the tailnet is encrypted, but the
 application still needs its own authentication boundary. You can add the page
