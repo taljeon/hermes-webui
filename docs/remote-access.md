@@ -71,28 +71,30 @@ WebUI through the maintained `start.sh` or systemd path.
    arbitrary generated password. Serve terminates HTTPS before proxying to the
    local HTTP backend, so `HERMES_WEBUI_SECURE=1` keeps the session cookie
    HTTPS-only.
-3. Stop any existing WebUI before changing its binding. A process listening on
-   `0.0.0.0:8787` also answers the loopback health probe, so `start.sh` would
-   otherwise report "already running" without applying the new host argument.
-   Use `./ctl.sh stop` for a daemon started by `ctl.sh`. For any process
-   supervisor — systemd, launchd, supervisord, runit, or s6 — use that
-   supervisor's stop, unload, or down action from the
-   [supervisor guide](supervisor.md), then verify it reports the service stopped
-   and cannot auto-restart it. If WebUI was started directly, stop the exact
-   listener using the PID instructions that `start.sh` prints. Do not continue
-   until the previous listener has stopped.
+3. Restart WebUI through the same lifecycle owner that already manages it. A
+   process listening on `0.0.0.0:8787` also answers the loopback health probe,
+   so `start.sh` would otherwise report "already running" without applying the
+   new host or reloading `HERMES_WEBUI_SECURE=1`.
 
-   Then pin and start the backend with launcher arguments, which override any
-   conflicting host or port values from `.env`:
+   For a daemon started by `ctl.sh`, keep ownership with the controller:
+
+   ```bash
+   ./ctl.sh stop
+   ./ctl.sh start 8787 --host 127.0.0.1
+   ```
+
+   For a direct `start.sh` launch, stop the exact listener using the PID
+   instructions that `start.sh` prints, verify it has stopped, then run:
 
    ```bash
    ./start.sh 8787 --host 127.0.0.1
    ```
 
-   For a systemd launch, keep the password (unless it is already configured
-   through Settings) and `HERMES_WEBUI_SECURE=1` in the checkout's `.env`.
-   Then adapt the unit from the [supervisor guide](supervisor.md) so its
-   `ExecStart` pins host and port with arguments too:
+   For systemd, launchd, supervisord, runit, or s6, use that supervisor's stop,
+   unload, or down action from the [supervisor guide](supervisor.md), update its
+   configured launch command with `8787 --host 127.0.0.1`, and start it again
+   through the same supervisor. Do not launch `start.sh` directly while a
+   supervisor owns the service. For example, a systemd unit uses:
 
    ```ini
    ExecStart=/bin/bash %h/hermes-webui/start.sh 8787 --host 127.0.0.1 --foreground
@@ -100,8 +102,11 @@ WebUI through the maintained `start.sh` or systemd path.
 
    Do not rely on systemd `Environment=` entries to override conflicting
    values in `.env`: `start.sh` loads that file after the service environment.
-   Run `systemctl --user daemon-reload` and restart the stopped unit after
-   editing it.
+   Keep the password (unless it is already configured through Settings) and
+   `HERMES_WEBUI_SECURE=1` in the checkout's `.env`; do not rely on systemd
+   `Environment=` entries to override that later-loaded file. Stop the unit,
+   edit it, run `systemctl --user daemon-reload`, and start it again. Do not
+   continue until the selected lifecycle owner reports the new process running.
 
    For a different trusted reverse proxy that sets `X-Forwarded-Proto: https`,
    `HERMES_WEBUI_TRUST_FORWARDED_PROTO=1` is the alternative. Keep the explicit
@@ -165,9 +170,12 @@ server's Tailscale IP. Because this fallback uses plain HTTP, change the cookie
 setting before restarting WebUI while keeping the password non-empty:
 
 ```dotenv
-HERMES_WEBUI_PASSWORD=replace-with-a-strong-password
+HERMES_WEBUI_PASSWORD='replace-with-a-long-random-password'
 HERMES_WEBUI_SECURE=0
 ```
+
+Stop and restart through the same lifecycle owner described in step 3, changing
+that owner's host argument to `0.0.0.0`. For a direct launch only, run:
 
 ```bash
 ./start.sh 8787 --host 0.0.0.0
