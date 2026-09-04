@@ -74,6 +74,10 @@ WebUI through the maintained `start.sh` or systemd path.
    Do not rely on systemd `Environment=` entries to override conflicting
    values in `.env`: `start.sh` loads that file after the service environment.
    Run `systemctl --user daemon-reload` and restart the unit after editing it.
+
+   For a different trusted reverse proxy that sets `X-Forwarded-Proto: https`,
+   `HERMES_WEBUI_TRUST_FORWARDED_PROTO=1` is the alternative. Keep the explicit
+   `HERMES_WEBUI_SECURE=1` setting for Tailscale Serve.
 4. Open `http://127.0.0.1:8787` locally or through an SSH tunnel and confirm
    that an unauthenticated browser receives the login screen. Do not publish
    the Serve endpoint until this check succeeds. Use the local HTTP URL only
@@ -120,6 +124,9 @@ replace `HERMES_WEBUI_PASSWORD`.
 For the full CLI and Linux permission contracts, see the official
 [`tailscale serve` reference](https://tailscale.com/docs/reference/tailscale-cli/serve)
 and [Linux operator permission guide](https://tailscale.com/docs/reference/troubleshooting/linux/linux-operator-permission).
+The Simplified Chinese companion tracked in
+[#7393](https://github.com/nesquena/hermes-webui/issues/7393) should mirror the
+`HERMES_WEBUI_SECURE=1` Serve requirement when translated.
 
 ### Fallback: direct tailnet IP
 
