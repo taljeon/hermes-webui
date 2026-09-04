@@ -102,9 +102,12 @@ WebUI through the maintained `start.sh` or systemd path.
    - supervisord: `sudo supervisorctl stop hermes-webui`, then
      `sudo supervisorctl reread`, `sudo supervisorctl update`, and
      `sudo supervisorctl start hermes-webui`.
-   - runit: `sv down <service>`, then `sv up <service>`.
-   - s6: `s6-svc -d <service-directory>`, then
-     `s6-svc -u <service-directory>`.
+   - runit: `sv down <service-directory>`, edit
+     `<service-directory>/run` so its `exec` invokes
+     `/bin/bash /path/to/hermes-webui/start.sh 8787 --host 127.0.0.1 --foreground`,
+     then run `sv up <service-directory>`.
+   - s6: `s6-svc -d <service-directory>`, apply the same `exec` change in
+     `<service-directory>/run`, then run `s6-svc -u <service-directory>`.
 
    The [supervisor guide](supervisor.md) shows the corresponding launch-command
    locations. Do not launch `start.sh` directly while a supervisor owns the
