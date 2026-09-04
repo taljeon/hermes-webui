@@ -34,23 +34,82 @@ The Hermes Web UI is fully responsive with a mobile-optimized layout
 (hamburger sidebar, sidebar top tabs in the drawer, touch-friendly controls),
 so it works well as a daily-driver agent interface from your phone.
 
-**Setup:**
+### Preferred: Tailscale Serve
+
+[Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve) exposes
+the WebUI at a tailnet-only HTTPS/MagicDNS URL while Hermes keeps listening on
+`127.0.0.1`. Serve owns the network front door; continue launching Hermes
+WebUI through the maintained `start.sh` or systemd path.
 
 1. Install [Tailscale](https://tailscale.com/download) on your server and
    your iPhone/Android.
-2. Start the WebUI listening on all interfaces with password auth enabled:
+2. Keep password authentication enabled and start the WebUI on its default
+   loopback address:
+
+   ```bash
+   HERMES_WEBUI_PASSWORD=your-secret ./start.sh
+   ```
+
+3. On Linux, allow the unprivileged account that runs WebUI to manage
+   Tailscale. This is a one-time administrator action:
+
+   ```bash
+   sudo tailscale set --operator="$USER"
+   ```
+
+4. As that operator account, publish the loopback service in the background:
+
+   ```bash
+   tailscale serve --bg 8787
+   ```
+
+   The command prints the tailnet-only HTTPS URL to open on your phone.
+   Background Serve configuration persists across device reboots and
+   `tailscale down` / `tailscale up` restarts.
+
+5. Verify the active mapping:
+
+   ```bash
+   tailscale serve status
+   ```
+
+   To remove all Serve mappings from this device, run:
+
+   ```bash
+   tailscale serve reset
+   ```
+
+Serve requires HTTPS support in the tailnet. If it is not enabled yet, the
+command can print an interactive consent URL for enabling the prerequisite.
+Tailnet encryption and access-control rules narrow exposure, but they do not
+replace `HERMES_WEBUI_PASSWORD`.
+
+> **Serve, not Funnel:** Serve is available only inside your tailnet.
+> [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel) is
+> public on the internet and is not the recommended path for Hermes WebUI.
+
+For the full CLI and Linux permission contracts, see the official
+[`tailscale serve` reference](https://tailscale.com/docs/reference/tailscale-cli/serve)
+and [Linux operator permission guide](https://tailscale.com/docs/reference/troubleshooting/linux/linux-operator-permission).
+
+### Fallback: direct tailnet IP
+
+If Serve is disabled for your tailnet or you cannot configure an operator,
+bind WebUI to all interfaces with application password authentication enabled,
+then access it through the server's Tailscale IP:
 
 ```bash
 HERMES_WEBUI_HOST=0.0.0.0 HERMES_WEBUI_PASSWORD=your-secret ./start.sh
 ```
 
-3. Open `http://<server-tailscale-ip>:8787` in your phone's browser
-   (find your server's Tailscale IP in the Tailscale app or with
-   `tailscale ip -4` on the server).
+Open `http://<server-tailscale-ip>:8787` in your phone's browser (find the IP
+in the Tailscale app or with `tailscale ip -4` on the server).
 
-That's it. Traffic is encrypted end-to-end by WireGuard, and password auth
-protects the UI at the application level. You can add it to your home screen
-for an app-like experience.
+Never bind Hermes WebUI to `0.0.0.0` without `HERMES_WEBUI_PASSWORD`.
+`0.0.0.0` listens on every interface, not only Tailscale, so keep the host
+firewall restricted as well. Traffic inside the tailnet is encrypted, but the
+application still needs its own authentication boundary. You can add the page
+to your home screen for an app-like experience.
 
 ### Community field report: ARM64 Android via AVF
 
