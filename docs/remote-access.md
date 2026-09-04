@@ -43,15 +43,16 @@ WebUI through the maintained `start.sh` or systemd path.
 
 1. Install [Tailscale](https://tailscale.com/download) on your server and
    your iPhone/Android.
-2. Keep password authentication enabled. If this checkout has a `.env` file,
-   put the password there instead of relying on an inline environment value;
-   `start.sh` loads `.env` before launch:
+2. Before publishing anything, enable application authentication. Create or
+   edit `.env` in the WebUI checkout and set a non-empty, strong password:
 
    ```dotenv
-   HERMES_WEBUI_PASSWORD=your-secret
+   HERMES_WEBUI_PASSWORD=replace-with-a-strong-password
    ```
 
-   Then pin the backend address with launcher arguments, which override any
+   Alternatively, configure a password through Settings while reaching WebUI
+   only over loopback or an SSH tunnel.
+3. Pin the backend address with launcher arguments, which override any
    conflicting host or port values from `.env`:
 
    ```bash
@@ -60,15 +61,18 @@ WebUI through the maintained `start.sh` or systemd path.
 
    For a systemd launch, set the same host, port, and non-empty password in
    the service environment.
+4. Open `http://127.0.0.1:8787` locally or through an SSH tunnel and confirm
+   that an unauthenticated browser receives the login screen. Do not publish
+   the Serve endpoint until this check succeeds.
 
-3. On Linux, allow the unprivileged account that runs WebUI to manage
+5. On Linux, allow the unprivileged account that runs WebUI to manage
    Tailscale. This is a one-time administrator action:
 
    ```bash
    sudo tailscale set --operator="$USER"
    ```
 
-4. As that operator account, publish the loopback service in the background:
+6. As that operator account, publish the loopback service in the background:
 
    ```bash
    tailscale serve --bg 8787
@@ -78,7 +82,7 @@ WebUI through the maintained `start.sh` or systemd path.
    Background Serve configuration persists across device reboots and
    `tailscale down` / `tailscale up` restarts.
 
-5. Verify the active mapping:
+7. Verify the active mapping:
 
    ```bash
    tailscale serve status
@@ -106,9 +110,9 @@ and [Linux operator permission guide](https://tailscale.com/docs/reference/troub
 ### Fallback: direct tailnet IP
 
 If Serve is disabled for your tailnet or you cannot configure an operator,
-keep a non-empty `HERMES_WEBUI_PASSWORD` in `.env` as shown above, bind WebUI
-to all interfaces with an explicit launcher override, then access it through
-the server's Tailscale IP:
+complete the password setup and login-screen check above, bind WebUI to all
+interfaces with an explicit launcher override, then access it through the
+server's Tailscale IP:
 
 ```bash
 ./start.sh 8787 --host 0.0.0.0
